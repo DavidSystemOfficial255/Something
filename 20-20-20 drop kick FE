@@ -1,1 +1,79 @@
+-- Settings
+local dashSpeedInitial = 90
+local dashSpeedFinal = 51.5  -- Slowdown after 7.89 seconds
+local dashStopTime = 9.9   -- Stop the dash completely
+local dashStartDelay = 1.92  -- Delay before starting the dash
+local animationId = "135889804043223"  -- Dash animation
+local cooldown = 12 -- Cooldown between dashes
+
+local player = game:GetService("Players").LocalPlayer
+repeat wait() until player.Character  -- Ensure character is loaded
+local character = player.Character
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+local rootPart = character:FindFirstChild("HumanoidRootPart")
+local userInputService = game:GetService("UserInputService")
+
+local debounce = false
+local dashRunning = false
+local dashDirection = Vector3.zero
+local dashStartTime = 0
+local dashSpeed = dashSpeedInitial
+
+-- Animation Setup
+local animation = Instance.new("Animation")
+animation.AnimationId = "rbxassetid://" .. animationId
+local animator = humanoid:FindFirstChildOfClass("Animator")
+local animTrack = animator:LoadAnimation(animation)
+
+-- Function to Start Dash
+local function startDash()
+	if debounce then return end
+	debounce = true
+
+	-- Play dash animation
+	animTrack:Play()
+
+	-- Wait before dashing
+	wait(dashStartDelay)
+
+	-- Set dash direction to current look vector
+	dashDirection = rootPart.CFrame.LookVector
+	dashSpeed = dashSpeedInitial
+	dashRunning = true
+	dashStartTime = tick()
+
+	-- Dash Loop
+	while dashRunning do
+		-- Update direction
+		dashDirection = rootPart.CFrame.LookVector
+
+		-- Move character using velocity
+		rootPart.Velocity = dashDirection * dashSpeed
+
+		-- Slow down at 7.89 seconds
+		if tick() - dashStartTime >= 7.89 then
+			dashSpeed = dashSpeedFinal
+		end
+
+		-- Stop dash at 9.9 seconds
+		if tick() - dashStartTime >= dashStopTime then
+			dashRunning = false
+			rootPart.Velocity = Vector3.zero  -- Stop movement
+			break
+		end
+
+		wait(0.05)  -- Update every frame
+	end
+
+	-- Cooldown before allowing dash again
+	wait(cooldown)
+	debounce = false
+end
+
+-- Q Key Press to activate Dash
+userInputService.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Q then
+		startDash()
+	end
+end)
 
