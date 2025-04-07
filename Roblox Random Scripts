@@ -49,9 +49,8 @@ end
 button.MouseButton1Click:Connect(toggleAbility)
 
 -- Dash ability activation
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Q and not isDashing and abilityActive then
+local function dashAbility()
+    if not isDashing and abilityActive then
         isDashing = true
         local startTime = tick()
 
@@ -76,5 +75,9 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
             end
         end)
     end
-end)
+end
+
+-- Activate dash when the mobile button is clicked
+button.MouseButton1Click:Connect(dashAbility)
+
 ]])()
