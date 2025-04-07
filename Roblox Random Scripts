@@ -13,32 +13,68 @@ local DASH_DURATION = 1.5 -- Dash lasts 1.5 seconds
 local DASH_COOLDOWN = 2 -- Cooldown before dashing again you can set it on 0 if you want no cooldown
 local isDashing = false
 
+-- Create Mobile-Friendly UI Button
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+local button = Instance.new("TextButton", screenGui)
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.9, -25)
+button.Text = "Activate Ability"
+button.TextColor3 = Color3.fromRGB(0, 255, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+button.AnchorPoint = Vector2.new(0.5, 0.5)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 24
+
+local abilityActive = false
+
+-- Toggle the ability and button text
+local function toggleAbility()
+    if abilityActive then
+        -- Deactivate Ability
+        button.Text = "Activate Ability"
+        button.TextColor3 = Color3.fromRGB(0, 255, 0)
+        abilityActive = false
+        -- Put your deactivation code here
+        print("Ability Deactivated")
+    else
+        -- Activate Ability
+        button.Text = "Deactivate Ability"
+        button.TextColor3 = Color3.fromRGB(255, 0, 0)
+        abilityActive = true
+        -- Put your activation code here
+        print("Ability Activated")
+    end
+end
+
+button.MouseButton1Click:Connect(toggleAbility)
+
+-- Dash ability activation
 UIS.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.KeyCode == Enum.KeyCode.Q and not isDashing then
-		isDashing = true
-		local startTime = tick()
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Q and not isDashing and abilityActive then
+        isDashing = true
+        local startTime = tick()
 
-		-- Create BodyVelocity with high force on all axes so ground friction won't stop the dash.
-		local dashVelocity = Instance.new("BodyVelocity")
-		dashVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
-		dashVelocity.Parent = humanoidRootPart
+        -- Create BodyVelocity with high force on all axes so ground friction won't stop the dash.
+        local dashVelocity = Instance.new("BodyVelocity")
+        dashVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
+        dashVelocity.Parent = humanoidRootPart
 
-		-- Update dash direction every frame for super-smooth rotation.
-		local connection
-		connection = RunService.RenderStepped:Connect(function()
-			local elapsed = tick() - startTime
-			if elapsed < DASH_DURATION then
-				-- Use the camera's look vector for a smooth, fluid dash direction.
-				local currentDirection = camera.CFrame.LookVector
-				dashVelocity.Velocity = currentDirection * DASH_SPEED
-			else
-				connection:Disconnect()
-				dashVelocity:Destroy()
-				isDashing = false
-				task.wait(DASH_COOLDOWN)
-			end
-		end)
-	end
+        -- Update dash direction every frame for super-smooth rotation.
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            local elapsed = tick() - startTime
+            if elapsed < DASH_DURATION then
+                -- Use the camera's look vector for a smooth, fluid dash direction.
+                local currentDirection = camera.CFrame.LookVector
+                dashVelocity.Velocity = currentDirection * DASH_SPEED
+            else
+                connection:Disconnect()
+                dashVelocity:Destroy()
+                isDashing = false
+                task.wait(DASH_COOLDOWN)
+            end
+        end)
+    end
 end)
 ]])()
